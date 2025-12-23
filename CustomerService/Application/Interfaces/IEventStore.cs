@@ -14,5 +14,7 @@ namespace Application.Interfaces
         Task<AggregateRoot> LoadAsync(
             Guid id,
             Func<AggregateRoot> aggregateFactory);
+        Task<IReadOnlyList<AggregateRoot>> LoadAllAsync(
+    Func<AggregateRoot> aggregateFactory);
     }
 }

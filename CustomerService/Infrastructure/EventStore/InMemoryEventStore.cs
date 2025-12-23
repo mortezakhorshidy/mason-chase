@@ -26,19 +26,40 @@ namespace Infrastructure.EventStore
         public async Task<AggregateRoot> LoadAsync(Guid id,
         Func<AggregateRoot> aggregateFactory)
         {
+            var aggregate = aggregateFactory();
+
+            if (!_store.ContainsKey(id))
+                return aggregate;
+
+            foreach (var @event in _store[id])
+            {
+                aggregate.GetType()
+                    .GetMethod("When", BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .Invoke(aggregate, new object[] { @event });
+            }
+
+            return aggregate;
+        }
+        public async Task<IReadOnlyList<AggregateRoot>> LoadAllAsync(
+            Func<AggregateRoot> aggregateFactory)
+        {
+            var result = new List<AggregateRoot>();
+
+            foreach (var entry in _store)
+            {
                 var aggregate = aggregateFactory();
 
-                if (!_store.ContainsKey(id))
-                    return aggregate;
-
-                foreach (var @event in _store[id])
+                foreach (var @event in entry.Value)
                 {
                     aggregate.GetType()
                         .GetMethod("When", BindingFlags.NonPublic | BindingFlags.Instance)!
                         .Invoke(aggregate, new object[] { @event });
                 }
 
-                return aggregate;
+                result.Add(aggregate);
+            }
+
+            return result;
         }
     }
 }

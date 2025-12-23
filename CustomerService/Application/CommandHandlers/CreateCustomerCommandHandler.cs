@@ -24,7 +24,7 @@ namespace Application.CommandHandlers
             _uniquenessChecker = uniquenessChecker;
         }
 
-        public async Task<Guid> Handle(CreateCustomerCommand command)
+        public async Task<Customer> Handle(CreateCustomerCommand command)
         {
             if (!await _uniquenessChecker.IsCustomerUnique(
                     command.FirstName,
@@ -46,7 +46,7 @@ namespace Application.CommandHandlers
             await _eventStore.SaveAsync(customer);
 
 
-            return customer.Id;
+            return customer;
         }
     }
 }

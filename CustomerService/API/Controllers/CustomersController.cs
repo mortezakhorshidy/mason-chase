@@ -1,5 +1,7 @@
 using Application.CommandHandlers;
 using Application.Commands;
+using Application.ModelViews;
+using Domain.Aggregates;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -11,23 +13,30 @@ namespace API.Controllers
         private readonly CreateCustomerCommandHandler _createHandler;
         private readonly UpdateCustomerCommandHandler _updateHandler;
         private readonly DeleteCustomerCommandHandler _deleteHandler;
+        private readonly GetAllCustomerQueryHandler _getAllHandler;
 
         public CustomersController(
             CreateCustomerCommandHandler createHandler,
             UpdateCustomerCommandHandler updateHandler,
-            DeleteCustomerCommandHandler deleteHandler)
+            DeleteCustomerCommandHandler deleteHandler,
+            GetAllCustomerQueryHandler getAllHandler)
         {
             _createHandler = createHandler;
             _updateHandler = updateHandler;
             _deleteHandler = deleteHandler;
+            _getAllHandler = getAllHandler;
         }
 
         // CREATE
         [HttpPost]
         public async Task<IActionResult> Create(CreateCustomerCommand command)
         {
-            var id = await _createHandler.Handle(command);
-            return CreatedAtAction(nameof(GetById), new { id }, null);
+            var Customer = await _createHandler.Handle(command);
+            return Ok(new ResultModelView()
+            {
+                Result = ResultTypeEnum.Success,
+                Model = Customer.DomainEvents.FirstOrDefault()
+            });
         }
 
         // UPDATE
@@ -50,6 +59,16 @@ namespace API.Controllers
         public IActionResult GetById(Guid id)
         {
             return Ok();
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var AllCustomer = await _getAllHandler.Handle();
+            return Ok(new ResultModelView()
+            {
+                Result = ResultTypeEnum.Success,
+                Model = AllCustomer,
+            });
         }
     }
 }
